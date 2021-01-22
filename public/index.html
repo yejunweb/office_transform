@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>office_transform</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        @keyframes background-animate {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+        html {
+            background-image: linear-gradient(100deg, rgb(64, 158, 255), rgb(255, 167, 167));
+            background-size: 200%;
+            animation: background-animate 15s linear infinite;
+        }
+        body {
+            font-size: 14px;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .file_content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .upload_group {
+            margin-top: 20px;
+        }
+        .upload_group button {
+            display: inline-block;
+            width: 120px;
+            line-height: 38px;
+            font-size: 15px;
+            color: #fff;
+            background: rgba(63, 152, 255, 0.8);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+        }
+        .upload_group button:hover {
+            background: rgba(63, 152, 255, 1);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        .upload_group input[type=file] {
+            display: none;
+        }
+        .file_group, .file_group th, .file_group td {
+            color: #fff;
+            border: 1px solid #fff;
+            border-collapse: collapse;
+            text-align: center;
+            padding: 10px 30px;
+        }
+        .file_group tr td a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .file_group tr td a:hover {
+            text-decoration: underline;
+        }
+        .file_group tr th:last-child, .file_group tr td:last-child {
+            width: 400px;
+        }
+        .loading {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 99;
+            display: none;
+        }
+        .loading .loading_item {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="file_content">
+        <table class="file_group">
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>文件名</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div class="upload_group">
+            <button>上传文档</button>
+            <input type="file" />
+        </div>
+    </div>
+    <!-- loading -->
+    <div class="loading">
+        <div class="loading_item">上传中...</div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script>
+        $('.upload_group button').click(function() {
+            $('.upload_group input').click()
+        })
+        $('.upload_group input').on('change', function(e) {
+            $('.loading').fadeIn() // show loading
+            var formObj = new FormData()
+            formObj.append('file', e.target.files[0])
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formObj,
+                contentType: false,
+                processData: false,
+                contents: { 'enctype': 'multipart/form-data' },
+                success: function(res) {
+                    console.log(res)
+                    getFileList()
+                    $('.upload_group input').val('') // clear input file
+                    $('.loading').fadeOut() // hide loading
+                }
+            })
+        })
+        // 获取列表
+        function getFileList() {
+            $.ajax({
+                url: '/filelist',
+                type: 'GET',
+                contentType: false,
+                processData: false,
+                success: function(res) {
+                    console.log(res)
+                    let tableData = ''
+                    $.each(res.data, function(index, item) {
+                        tableData += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>
+                                <a href="${item}" target="_blank">${item}</a>
+                            </td>
+                        </tr>
+                        `
+                    })
+                    $('.file_group tbody').html(tableData)
+                }
+            })
+        }
+        getFileList()
+    </script>
+</body>
+</html>
